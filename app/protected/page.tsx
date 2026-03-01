@@ -1,43 +1,40 @@
-import { redirect } from "next/navigation";
+import Image from "next/image";
+import { ActionCard } from "@/components/actionCard";
 
-import { createClient } from "@/lib/supabase/server";
-import { InfoIcon } from "lucide-react";
-import { FetchDataSteps } from "@/components/tutorial/fetch-data-steps";
-import { Suspense } from "react";
+import {
+  Film, FolderOpenDot, ListChecks, Tags, UserRound, CalendarDays,
+  Star, Eye, BarChart3, Settings, Upload, BookOpenText
+} from "lucide-react";
 
-async function UserDetails() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
 
-  if (error || !data?.claims) {
-    redirect("/auth/login");
-  }
-
-  return JSON.stringify(data.claims, null, 2);
-}
-
-export default function ProtectedPage() {
+export default function Home() {
   return (
-    <div className="flex-1 w-full flex flex-col gap-12">
-      <div className="w-full">
-        <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
-          <InfoIcon size="16" strokeWidth={2} />
-          This is a protected page that you can only see as an authenticated
-          user
+    <div className="mx-auto max-w-4xl">
+      {/* Align left: remove justify-center and items-center */}
+      <main className="flex w-full max-w-3xl flex-col items-start py-10 dark:bg-black">
+        <div className="w-full">
+          {/* Top section */}
+          <section className="mb-6 py-10">
+            <h3 className="text-4xl font-extrabold tracking-tight text-gray-900">
+              <span className="text-[rgb(0,76,157)]">What would you like to do today?</span>
+            </h3>
+          </section>
+
+          {/* Action grid */}
+          <section aria-label="Quick actions">
+            {/*
+              Want exactly two per row on typical screens?
+              Use grid-cols-1 on base (phones) and sm:grid-cols-2 from small breakpoint upward.
+            */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <ActionCard href="/protected/movies" label="My Movie Library" icon={<Film className="h-5 w-5" />} />
+              <ActionCard href="/stats" label="My Movie Shelfs" icon={<BarChart3 className="h-5 w-5" />} />
+              <ActionCard href="/protected/about" label="About Us" icon={<BookOpenText className="h-5 w-5" />} />
+              <ActionCard href="/protected/userManager" label="User Manager" icon={<UserRound className="h-5 w-5" />} />
+            </div>
+          </section>
         </div>
-      </div>
-      <div className="flex flex-col gap-2 items-start">
-        <h2 className="font-bold text-2xl mb-4">Your user details</h2>
-        <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-          <Suspense>
-            <UserDetails />
-          </Suspense>
-        </pre>
-      </div>
-      <div>
-        <h2 className="font-bold text-2xl mb-4">Next steps</h2>
-        <FetchDataSteps />
-      </div>
+      </main>
     </div>
   );
 }

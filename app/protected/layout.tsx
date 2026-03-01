@@ -1,55 +1,55 @@
-import { DeployButton } from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
 import { AuthButton } from "@/components/auth-button";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { hasEnvVars } from "@/lib/utils";
+import Image from "next/image"; 
 import Link from "next/link";
-import { Suspense } from "react";
+import { MovieProvider } from "@/app/contexts/MovieProvider";
+import { UserProvider } from "@/app/contexts/UserProvider";
 
 export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <main className="min-h-screen flex flex-col items-center">
-      <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <div className="flex gap-5 items-center font-semibold">
-              <Link href={"/"}>Next.js Supabase Starter</Link>
-              <div className="flex items-center gap-2">
-                <DeployButton />
-              </div>
-            </div>
-            {!hasEnvVars ? (
-              <EnvVarWarning />
-            ) : (
-              <Suspense>
-                <AuthButton />
-              </Suspense>
-            )}
-          </div>
-        </nav>
-        <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
-          {children}
-        </div>
 
-        <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
-          </p>
-          <ThemeSwitcher />
-        </footer>
-      </div>
-    </main>
+  return (
+    <body className="flex flex-col min-h-screen"> 
+
+
+      {/* Header */}
+        <header className="w-full p-4 bg-[rgb(0,76,157)] text-white">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-10">
+
+              {/* Logo */}
+              <Link href="/protected" className="flex items-center">
+                <Image src="/movie-camera.svg" alt="Home" width={70} height={70} className="object-contain" />
+              </Link>
+
+              <nav className="flex gap-8 text-lg font-bold">
+                <a href="/protected/movies" className="hover:underline">My Movie Library</a>
+                <a href="/" className="hover:underline">My Movie Shelfs</a>
+                <a href="/protected/about" className="hover:underline">About Us</a>
+                <a href="/protected/userManager" className="hover:underline">User Manager</a>
+              </nav>
+            </div>
+
+            {/* Right: Hello label */}
+            <AuthButton />
+          </div>
+        </header>
+
+          <MovieProvider>
+            <UserProvider>
+              <main className="flex-1">{children}</main>
+            </UserProvider>
+          </MovieProvider>
+      
+
+      {/* Footer */}
+        <footer className="mt-auto p-4 bg-[rgb(0,76,157)]">
+            <div className="text-center pb-3 text-sm text-white"> 
+              <span>Copyright © 2026 MyMovieShelf. All rights reserved. </span> 
+            </div> 
+        </footer> 
+    </body> 
   );
 }
