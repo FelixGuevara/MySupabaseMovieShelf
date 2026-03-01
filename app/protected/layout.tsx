@@ -1,6 +1,7 @@
 import { AuthButton } from "@/components/auth-button";
 import Image from "next/image"; 
 import Link from "next/link";
+import { Suspense } from "react";
 import { MovieProvider } from "@/app/contexts/MovieProvider";
 import { UserProvider } from "@/app/contexts/UserProvider";
 
@@ -33,16 +34,21 @@ export default function ProtectedLayout({
             </div>
 
             {/* Right: Hello label */}
-            <AuthButton />
+            <Suspense fallback={<span className="opacity-80">Loading…</span>}>
+              <AuthButton />
+            </Suspense>
           </div>
         </header>
 
-          <MovieProvider>
-            <UserProvider>
-              <main className="flex-1">{children}</main>
-            </UserProvider>
-          </MovieProvider>
-      
+        <Suspense fallback={<div className="p-4">Loading user…</div>}>
+          <UserProvider>
+            <Suspense fallback={<div className="p-4">Loading movies…</div>}>
+              <MovieProvider>
+                <main className="flex-1">{children}</main>
+              </MovieProvider>
+            </Suspense>
+          </UserProvider>
+        </Suspense>
 
       {/* Footer */}
         <footer className="mt-auto p-4 bg-[rgb(0,76,157)]">
