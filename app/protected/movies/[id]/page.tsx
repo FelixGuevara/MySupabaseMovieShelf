@@ -6,7 +6,7 @@ export default async function MovieDetailsPage({
   params,
 }: {
   // NOTE: params is a Promise now
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: number }>;
 }) {
   const { id } = await params; // unwrap the promise
   console.log("[movies/[id]/page] params:", { id });

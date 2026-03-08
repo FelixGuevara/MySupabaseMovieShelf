@@ -1,16 +1,24 @@
 // types/movie.ts
 export interface Movie {
-  id: string;
+  id: number;
   title: string;
-  releaseYear: string;
-  user: {
-    name: string;
-    id: string;
-  };
-  runTime: string;
+  releaseyear: string;
+  userid: string;
+  runtime: string;
   genre: string;
   director: string;
   date: string; // ISO or display string
   status: "completed" | "pending" | "failed";
-  posterUrl?: string; 
+  posterurl?: string; 
 }
+
+export type NewMovie = {
+  title: string;
+  releaseyear: string;
+  runtime: string;
+  genre: string;
+  director: string;
+  status: "completed" | "pending" | "failed";
+  posterurl?: string | null;
+  userid: string;
+};

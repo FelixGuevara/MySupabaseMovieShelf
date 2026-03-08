@@ -1,143 +1,265 @@
 // contexts/MovieProvider.tsx
 "use client";
 
-import React from "react";
-import type { Movie } from "../types/movie";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { Movie, NewMovie } from "../types/movie";
 
-type MovieContextValue = {
+type StatusFilter = "all" | "completed" | "pending" | "failed";
+
+type MovieContextShape = {
   movies: Movie[];
-  addMovie: (m: Movie) => void;
-  editMovie: (m: Movie) => void;
-  deleteMovie: (id: string) => void;
-  getById: (id: string) => Movie | undefined;
-  setAll: React.Dispatch<React.SetStateAction<Movie[]>>;
+  filteredMovies: Movie[];
+  loading: boolean;
+  error: string | null;
+
+  searchQuery: string;
+  setSearchQuery: (v: string) => void;
+
+  statusFilter: StatusFilter;
+  setStatusFilter: (v: StatusFilter) => void;
+
+  refresh: () => Promise<void>;
+
+  addMovie: (u: NewMovie) => Promise<Movie | null>;
+  editMovie: (id: number, patch: Partial<Omit<Movie, "id">>) => Promise<Movie | null>;
+  deleteMovie: (id: number) => Promise<boolean>;
+  getById: (id: number) => Movie | undefined;
 };
 
-const initialMovies: Movie[] = [
-  {
-    id: "1",
-    title: "The Godfather",
-    releaseYear: "1972",
-    user: { name: "Adaego Boniface", id: "STU/2021/001" },
-    runTime: "2h 55m",
-    genre: "Crime",
-    director: "Francis Coppola",
-    date: "2024-01-20",
-    status: "completed",
-    posterUrl: "/posters/godfather.jpg",
-  },
-  {
-    id: "2",
-    title: "Schindler's List",
-    releaseYear: "1993",
-    user: { name: "Tunuka Bakara", id: "STU/2021/003" },
-    runTime: "3h 15m",
-    genre: "War/Drama",
-    director: "Steven Spielberg",
-    date: "2024-01-19",
-    status: "pending",
-    posterUrl: "/posters/schindlerlist.jpg",
-  },
-  {
-    id: "3",
-    title: "Pulp Fiction",
-    releaseYear: "1994",
-    user: { name: "Grace Chibora", id: "STU/2021/003" },
-    runTime: "2h 29m",
-    genre: "Crime/Thriller",
-    director: "Quentin Tarantino",
-    date: "2024-01-18",
-    status: "completed",
-    posterUrl: "/posters/pulpfiction.jpg",
-  },
-  {
-    id: "4",
-    title: "The Dark Knight",
-    releaseYear: "2008",
-    user: { name: "Yusuf Ibrahim", id: "STU/2021/004" },
-    runTime: "2h 32m",
-    genre: "Action/Crime",
-    director: "Christopher Nolan",
-    date: "2024-01-17",
-    status: "pending",
-    posterUrl: "/posters/darkknight.jpg",
-  },
-  {
-    id: "5",
-    title: "Casablanca",
-    releaseYear: "1942",
-    user: { name: "Adaego Chioma", id: "STU/2021/002" },
-    runTime: "1h 42m",
-    genre: "Romance/War",
-    director: "Michael Curtiz",
-    date: "2024-01-16",
-    status: "completed",
-    posterUrl: "/posters/casablanca.jpg",
-  },
-  {
-    id: "6",
-    title: "Space Odyssey",
-    releaseYear: "1968",
-    user: { name: "Emeka Adaokwu", id: "STU/2021/006" },
-    runTime: "2h 29m",
-    genre: "Sci-fi/Adventure",
-    director: "Stanley Kubrick",
-    date: "2024-01-13",
-    status: "pending",
-    posterUrl: "/posters/spaceodyssey.jpg",
-  },
-  {
-    id: "7",
-    title: "Goodfellas",
-    releaseYear: "1990",
-    user: { name: "Felix Guevara", id: "STU/2022/007" },
-    runTime: "2h 26m",
-    genre: "Crime/Thriller",
-    director: "Martin Scorsese",
-    date: "2025-01-13",
-    status: "completed",
-    posterUrl: "/posters/goodfellas.jpg",
-  },
-  {
-    id: "8",
-    title: "Saving Private Ryan",
-    releaseYear: "1998",
-    user: { name: "Felix Guevara", id: "STU/2025/008" },
-    runTime: "2h 49m",
-    genre: "War/Action",
-    director: "Steven Spielberg",
-    date: "2025-06-13",
-    status: "pending",
-    posterUrl: "/posters/savingprivateryan.jpg",
-  },
-];
+const MovieContext = createContext<MovieContextShape | undefined>(undefined);
 
-const MovieContext = React.createContext<MovieContextValue | null>(null);
+type ProviderProps = {
+  children: ReactNode;
+  /** Optional server-hydrated data */
+  initialMovies?: Movie[];
+  /** Enable realtime sync (on by default) */
+  realtime?: boolean;
+};
 
-export function MovieProvider({ children }: { children: React.ReactNode }) {
-  const [movies, setMovies] = React.useState<Movie[]>(initialMovies);
+export function MovieProvider({ children, initialMovies, realtime = true }: ProviderProps) {
+  const [movies, setMovies] = useState<Movie[]>(initialMovies ?? []);
+  const [loading, setLoading] = useState<boolean>(!initialMovies);
+  const [error, setError] = useState<string | null>(null);
 
-  const addMovie = (m: Movie) => setMovies((prev) => [m, ...prev]);
-  const editMovie = (m: Movie) =>
-    setMovies((prev) => prev.map((x) => (x.id === m.id ? m : x)));
-  const deleteMovie = (id: string) =>
-    setMovies((prev) => prev.filter((x) => x.id !== id));
-  const getById = (id: string) => movies.find((x) => x.id === id);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  const value: MovieContextValue = {
+  const supabase = createClient();
+
+  const fetchMovies = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    // Read from the *view* that exposes camelCase + userName
+    const { data, error } = await supabase
+      .from("movies")
+      .select("id, title, releaseyear, runtime, genre, director, date, status, posterurl, userid")
+      .order("date", { ascending: false });
+
+    if (error) {
+      setError(error.message);
+      setMovies([]);
+    } else {
+      setMovies((data ?? []) as Movie[]);
+    }
+    setLoading(false);
+  }, []);
+
+  // Initial load if no server data provided
+  useEffect(() => {
+    if (!initialMovies) fetchMovies();
+  }, [initialMovies, fetchMovies]);
+
+    // Optional: realtime sync for inserts/updates/deletes
+    useEffect(() => {
+      if (!realtime) return;
+  
+      const channel = supabase
+        .channel("movies-changes")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "movies" },
+          (payload) => {
+            if (payload.eventType === "INSERT") {
+              const newRow = payload.new as Movie;
+              setMovies((prev) => (prev.some((u) => u.id === newRow.id) ? prev : [newRow, ...prev]));
+            } else if (payload.eventType === "UPDATE") {
+              const updated = payload.new as Movie;
+              setMovies((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+            } else if (payload.eventType === "DELETE") {
+              const removed = payload.old as Movie;
+              setMovies((prev) => prev.filter((u) => u.id !== removed.id));
+            }
+          }
+        )
+        .subscribe();
+  
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }, [realtime]);
+
+
+  const filteredMovies = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return movies.filter((u) => {
+      const statusOk = statusFilter === "all" || (u.status ?? "").toLowerCase() === statusFilter;
+      const textOk =
+        !q ||
+        (u.title ?? "").toLowerCase().includes(q) ||
+        (u.director ?? "").toLowerCase().includes(q);
+      return statusOk && textOk;
+    });
+  }, [movies, searchQuery, statusFilter]);
+
+  const addMovie = useCallback(
+    async (u: NewMovie) => {
+      const payload = {
+        title: u.title,
+        releaseyear: u.releaseyear,
+        runtime: u.runtime,
+        genre: u.genre,
+        director: u.director,
+        posterurl: u.posterurl ?? null,
+        userid: "c88f3f25-7bb1-482c-8ed9-7cfb8ddd0d9c",
+      };
+      const { data, error } = await supabase
+        .from("movies")
+        .insert([payload])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("addMovie error:", error);
+        setError(error.message);
+        return null;
+      }
+
+    const inserted = data as Movie;
+    setMovies((prev) => [inserted, ...prev]);
+    return inserted;
+  }, []);
+
+  const editMovie = useCallback(
+  async (id: number, patch: Partial<Omit<Movie, "id">>) => {
+    setError(null);
+
+    // Build a safe, snake_case patch. DO NOT include id or user_id.
+    const dbPatch: Record<string, any> = {};
+
+    if (patch.title !== undefined) dbPatch.title = patch.title;
+    if (patch.releaseyear !== undefined) dbPatch.releaseyear = patch.releaseyear;
+    if (patch.runtime !== undefined) dbPatch.runtime = patch.runtime;
+    if (patch.genre !== undefined) dbPatch.genre = patch.genre;
+    if (patch.director !== undefined) dbPatch.director = patch.director;
+    if (patch.posterurl !== undefined) dbPatch.posterurl = patch.posterurl ?? null;
+    if (patch.status !== undefined) dbPatch.status = patch.status;
+    if (patch.date !== undefined) dbPatch.date = patch.date;
+
+    // Guard: nothing to update
+    if (Object.keys(dbPatch).length === 0) {
+      console.warn("[editMovie] Nothing to update. Incoming keys:", Object.keys(patch));
+      return movies.find((m) => m.id === id) ?? null;
+    }
+
+    console.log("[editMovie] Updating id:", id, "columns:", Object.keys(dbPatch));
+
+    // Update the base table (no 'id' in payload!)
+    const { data: idRow, error } = await supabase
+      .from("movies")
+      .update(dbPatch)
+      .eq("id", id)
+      .select("id")
+      .single();
+
+    if (error) {
+      setError(error.message);
+      return null;
+    }
+
+    // Fetch the full row from the view so we get camelCase + userName
+    const { data: fullRow, error: viewErr } = await supabase
+      .from("movies")
+      .select("*")
+      .eq("id", idRow.id)
+      .single();
+
+    if (viewErr) {
+      setError(viewErr.message);
+      return null;
+    }
+
+    // If you already have a map function, use it; otherwise map inline.
+    const updated: Movie = {
+      id: fullRow.id, // number (your Movie.id is number now)
+      title: fullRow.title,
+      releaseyear: fullRow.releaseyear,
+      userid: fullRow.userId,
+      runtime: fullRow.runtime,
+      genre: fullRow.genre,
+      director: fullRow.director,
+      date: fullRow.date,
+      status: fullRow.status,
+      posterurl: fullRow.posterurl ?? undefined,
+    };
+
+    setMovies((prev) => prev.map((u) => (u.id === id ? updated : u)));
+    return updated;
+  },
+  [supabase, movies, setMovies, setError]
+);
+
+
+  const deleteMovie = useCallback(async (id: number) => {
+    const { error } = await supabase.from("movies").delete().eq("id", id);
+    if (error) {
+      console.error("deleteUser error:", error);
+      setError(error.message);
+      return false;
+    }
+    setMovies((prev) => prev.filter((u) => u.id !== id));
+    return true;
+  }, []);
+
+  const getById = useCallback(
+    (id: number) => movies.find((u) => u.id === id),
+    [movies]
+  );
+
+  const value: MovieContextShape = {
     movies,
+    filteredMovies,
+    loading,
+    error,
+
+    searchQuery,
+    setSearchQuery,
+
+    statusFilter,
+    setStatusFilter,
+
+    refresh: fetchMovies,
+
     addMovie,
     editMovie,
     deleteMovie,
     getById,
-    setAll: setMovies,
   };
 
   return <MovieContext.Provider value={value}>{children}</MovieContext.Provider>;
 }
 
 export function useMovies() {
-  const ctx = React.useContext(MovieContext);
+  const ctx = useContext(MovieContext);
   if (!ctx) throw new Error("useMovies must be used within MovieProvider");
   return ctx;
 }

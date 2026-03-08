@@ -6,14 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react"; // optional icon for "View"
 
 interface Movie {
-  id: string;
+  id: number;
   title: string;
-  releaseYear: string;
-  user: {
-    name: string;
-    id: string;
-  };
-  runTime: string;
+  releaseyear: string;
+  userid: string;
+  runtime: string;
   genre: string;
   director: string;
   date: string;
@@ -22,9 +19,7 @@ interface Movie {
 
 interface MovieTableProps {
   movies: Movie[];
-  onEditMovie: (movie: Movie) => void;     // kept for compatibility (unused here)
   onViewMovie: (movie: Movie) => void;     // used by the View button
-  onDeleteMovie: (movieId: string) => void; // kept for compatibility (unused here)
 }
 
 export function MovieTable({ movies, onViewMovie }: MovieTableProps) {
@@ -71,9 +66,6 @@ export function MovieTable({ movies, onViewMovie }: MovieTableProps) {
                 Director
               </th>
               <th className="text-left py-3 px-4 text-xs uppercase text-gray-500 tracking-wider">
-                Added By
-              </th>
-              <th className="text-left py-3 px-4 text-xs uppercase text-gray-500 tracking-wider">
                 Date Added
               </th>
               <th className="text-left py-3 px-4 text-xs uppercase text-gray-500 tracking-wider">
@@ -91,10 +83,10 @@ export function MovieTable({ movies, onViewMovie }: MovieTableProps) {
                   <div className="text-gray-900">{movie.title}</div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="text-gray-600">{movie.releaseYear}</div>
+                  <div className="text-gray-600">{movie.releaseyear}</div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="text-gray-900">{movie.runTime}</div>
+                  <div className="text-gray-900">{movie.runtime}</div>
                 </td>
                 <td className="py-4 px-4">
                   <div className="text-gray-900">{movie.genre}</div>
@@ -103,13 +95,7 @@ export function MovieTable({ movies, onViewMovie }: MovieTableProps) {
                   <div className="text-gray-900">{movie.director}</div>
                 </td>
                 <td className="py-4 px-4">
-                  <div>
-                    <div className="text-gray-900">{movie.user.name}</div>
-                    <div className="text-gray-500 text-sm">{movie.user.id}</div>
-                  </div>
-                </td>
-                <td className="py-4 px-4">
-                  <div className="text-gray-600">{movie.date}</div>
+                  <div className="text-gray-600">{movie.date ? new Date(movie.date).toLocaleDateString("en-US") : "—"}</div>
                 </td>
                 <td className="py-4 px-4">{getStatusBadge(movie.status)}</td>
                 <td className="py-4 px-4">

@@ -16,64 +16,80 @@ import {
 import { MovieTable } from "./movieTable";
 import { toast } from "sonner";
 import { useMovies } from "@/app/contexts/MovieProvider";
+import type { NewMovie } from "@/app/types/movie";
 import type { Movie } from "@/app/types/movie";
+import { AddMovieDialog } from './addMovieDialog';
 
 export default function MovieLibraryPage() {
   const router = useRouter();
 
-  const { movies, deleteMovie } = useMovies();
+ const {
+    filteredMovies,
+    searchQuery,
+    statusFilter,
+    setSearchQuery,
+    setStatusFilter,
+    addMovie,
+    editMovie,
+    getById,
+    deleteMovie,
+  } = useMovies();
 
-  const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const handleAddNewMovie = () => setIsAddModalOpen(true);
   const handleCloseModal = () => setIsAddModalOpen(false);
 
-  const handleEditMovie = (movie: Movie) => {
-    toast.info(`Edit functionality for ${movie.title} will be implemented.`);
+  const handleCreateMovie = async (payload: {
+    title: string;
+    director: string;
+    releaseyear: string;
+    genre: string;
+    status: "completed" | "pending" | "failed";
+    posterurl?: string;
+  }) => {
+    const movie: NewMovie = {
+      title: payload.title,
+      director: payload.director || "",
+      releaseyear: payload.releaseyear ?? undefined,
+      genre: payload.genre,
+      status: payload.status,
+      posterurl: payload.posterurl,
+      runtime: "",
+      userid: "",
+      // add/align any other required fields your Movie type expects
+    };
+
+    // Optional: optimistic UI toast
+    const t = toast.loading("Adding movie...");
+
+    try {
+      await addMovie(movie); 
+      handleCloseModal();
+      router.refresh();
+    } 
+    catch (err: any) {
+      console.error(err);
+      toast.error(err?.message ?? "Failed to add movie", { id: t });
+      throw err; // rethrow so dialog doesn't close
+    }
   };
 
   const handleViewMovie = (movie: Movie) => {
     console.log("Navigating to id:", movie.id);
     
 
-    const id = String(movie.id);
+    const id = movie.id;
     const href = `/protected/movies/${encodeURIComponent(id)}`;
     console.log("Pushing to:", href);
     router.push(href);
     setTimeout(() => console.log("Now at:", window.location.pathname), 50);
   };
 
-  const handleDeleteMovie = (movieId: string) => {
-    const movie = movies.find((m) => m.id === movieId);
-    deleteMovie(movieId);
-    if (movie) {
-      toast.success(`${movie.title} has been deleted successfully.`);
-    }
-  };
-
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
-
-  const filteredMovies = useMemo(() => {
-    return movies.filter((movie) => {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch =
-        movie.title.toLowerCase().includes(q) ||
-        movie.director.toLowerCase().includes(q);
-      const matchesType =
-        typeFilter === "all" ||
-        movie.genre.toLowerCase().includes(typeFilter.toLowerCase());
-      const matchesStatus =
-        statusFilter === "all" ||
-        movie.status.toLowerCase() === statusFilter.toLowerCase();
-
-      return matchesSearch && matchesType && matchesStatus;
-    });
-  }, [movies, searchQuery, typeFilter, statusFilter]);
 
   return (
     <div className="flex-1 bg-gray-50 h-full flex flex-col">
@@ -132,7 +148,7 @@ export default function MovieLibraryPage() {
               </SelectContent>
             </Select>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={setStatusFilter as any}>
               <SelectTrigger className="w-40 bg-gray-50 border-gray-200">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
@@ -149,13 +165,19 @@ export default function MovieLibraryPage() {
           <div className="flex-1">
             <MovieTable
               movies={filteredMovies}
-              onEditMovie={handleEditMovie}
               onViewMovie={handleViewMovie}
-              onDeleteMovie={handleDeleteMovie}
             />
           </div>
         </div>
       </div>
+
+
+                {/* The Add Movie Dialog */}
+      <AddMovieDialog
+        open={isAddModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleCreateMovie}
+      />
     </div>
   );
 }

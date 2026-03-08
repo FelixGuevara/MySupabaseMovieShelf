@@ -45,12 +45,11 @@ function DetailItem({ label, value }: { label: string; value: React.ReactNode })
   );
 }
 
-export default function MovieDetailsClient({ id }: { id: string }) {
+export default function MovieDetailsClient({ id }: { id: number }) {
   const router = useRouter();
   const { getById, deleteMovie, editMovie } = useMovies();
 
-  const normalizedId = String(id).trim();
-  const movie = getById(normalizedId);
+  const movie = getById(Number(id));
 
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
@@ -59,8 +58,8 @@ export default function MovieDetailsClient({ id }: { id: string }) {
   // Local editable state (prefilled)
   const [form, setForm] = React.useState(() => ({
     title: movie?.title ?? "",
-    releaseYear: movie?.releaseYear ?? "",
-    runTime: movie?.runTime ?? "",
+    releaseyear: movie?.releaseyear ?? "",
+    runtime: movie?.runtime ?? "",
     genre: movie?.genre ?? "",
     director: movie?.director ?? "",
     status: (movie?.status ?? "pending") as Status,
@@ -70,8 +69,8 @@ export default function MovieDetailsClient({ id }: { id: string }) {
     if (movie) {
       setForm({
         title: movie.title ?? "",
-        releaseYear: movie.releaseYear ?? "",
-        runTime: movie.runTime ?? "",
+        releaseyear: movie.releaseyear ?? "",
+        runtime: movie.runtime ?? "",
         genre: movie.genre ?? "",
         director: movie.director ?? "",
         status: (movie.status ?? "pending") as Status,
@@ -88,7 +87,7 @@ export default function MovieDetailsClient({ id }: { id: string }) {
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <h1 className="text-lg font-semibold text-gray-900">Movie not found</h1>
           <p className="mt-2 text-gray-600">
-            We couldn't find a movie with id <span className="font-mono">{normalizedId}</span>.
+            We couldn't find a movie with id <span className="font-mono">{id}</span>.
           </p>
         </div>
       </div>
@@ -110,7 +109,7 @@ export default function MovieDetailsClient({ id }: { id: string }) {
       toast.error("Title is required.");
       return;
     }
-    if (!/^\d{4}$/.test(form.releaseYear.trim())) {
+    if (!/^\d{4}$/.test(form.releaseyear.trim())) {
       toast.error("Release year must be a 4-digit year (e.g., 1994).");
       return;
     }
@@ -118,7 +117,8 @@ export default function MovieDetailsClient({ id }: { id: string }) {
     setSaving(true);
     try {
       const updated = { ...movie, ...form, id: movie.id };
-      await Promise.resolve(editMovie(updated)); // supports sync/async
+
+      await Promise.resolve(editMovie(updated.id, updated)); // supports sync/async
       toast.success(`Saved changes to “${updated.title}”.`);
       setIsEditOpen(false);
     } catch (err) {
@@ -134,7 +134,7 @@ export default function MovieDetailsClient({ id }: { id: string }) {
     deleteMovie(movie.id);
     toast.success(`${movie.title} has been deleted successfully.`);
     setIsDeleteOpen(false);
-    router.push("/movies");
+    router.push("/protected/movies");
   };
 
   return (
@@ -149,7 +149,7 @@ export default function MovieDetailsClient({ id }: { id: string }) {
           <div className="min-w-0">
             <h1 className="truncate text-2xl font-semibold text-gray-900">{movie.title}</h1>
             <p className="text-gray-600">
-              Added by {movie.user.name} on {formatDate(movie.date)}
+              Added by {movie.userid} on {formatDate(movie.date)}
             </p>
           </div>
 
@@ -186,8 +186,8 @@ export default function MovieDetailsClient({ id }: { id: string }) {
                         inputMode="numeric"
                         pattern="\d{4}"
                         maxLength={4}
-                        value={form.releaseYear}
-                        onChange={onChange("releaseYear")}
+                        value={form.releaseyear}
+                        onChange={onChange("releaseyear")}
                         placeholder="1994"
                       />
                     </div>
@@ -195,8 +195,8 @@ export default function MovieDetailsClient({ id }: { id: string }) {
                       <Label htmlFor="runTime">Run Time</Label>
                       <Input
                         id="runTime"
-                        value={form.runTime}
-                        onChange={onChange("runTime")}
+                        value={form.runtime}
+                        onChange={onChange("runtime")}
                         placeholder="2h 22m"
                       />
                     </div>
@@ -289,9 +289,9 @@ export default function MovieDetailsClient({ id }: { id: string }) {
           {/* Poster column */}
           <div className="lg:col-span-4">
             <div className="relative aspect-[9/10] w-full overflow-hidden rounded-md border border-gray-200 bg-gray-100">
-              {movie.posterUrl ? (
+              {movie.posterurl ? (
                 <Image
-                  src={movie.posterUrl}
+                  src={movie.posterurl}
                   alt={`${movie.title} poster`}
                   fill
                   sizes="(max-width: 1024px) 50vw, 33vw"
@@ -306,8 +306,8 @@ export default function MovieDetailsClient({ id }: { id: string }) {
             </div>
 
             <div className="mt-3 text-xs text-gray-600 leading-tight space-y-1">
-              <div><span className="font-semibold text-gray-900">Year:</span> {movie.releaseYear}</div>
-              <div><span className="font-semibold text-gray-900">Runtime:</span> {movie.runTime}</div>
+              <div><span className="font-semibold text-gray-900">Year:</span> {movie.releaseyear}</div>
+              <div><span className="font-semibold text-gray-900">Runtime:</span> {movie.runtime}</div>
               <div><span className="font-semibold text-gray-900">Genre:</span> {movie.genre}</div>
             </div>
           </div>
@@ -316,11 +316,11 @@ export default function MovieDetailsClient({ id }: { id: string }) {
           <div className="lg:col-span-8">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <DetailItem label="Title" value={movie.title} />
-              <DetailItem label="Release Year" value={movie.releaseYear} />
-              <DetailItem label="Run Time" value={movie.runTime} />
+              <DetailItem label="Release Year" value={movie.releaseyear} />
+              <DetailItem label="Run Time" value={movie.runtime} />
               <DetailItem label="Genre" value={movie.genre} />
               <DetailItem label="Director" value={movie.director} />
-              <DetailItem label="Added By (ID)" value={`${movie.user.name} (${movie.user.id})`} />
+              <DetailItem label="Added By (ID)" value={`${movie.userid} (${movie.userid})`} />
               <DetailItem label="Date Added" value={formatDate(movie.date)} />
               <DetailItem label="Status" value={<MovieStatusBadge status={movie.status} />} />
             </div>
