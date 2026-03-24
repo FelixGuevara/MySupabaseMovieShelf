@@ -36,7 +36,6 @@ export default function MovieLibraryPage() {
   } = useMovies();
 
   const [typeFilter, setTypeFilter] = useState("all");
-
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const handleAddNewMovie = () => setIsAddModalOpen(true);
   const handleCloseModal = () => setIsAddModalOpen(false);

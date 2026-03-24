@@ -132,6 +132,7 @@ export function MovieProvider({ children, initialMovies, realtime = true }: Prov
         posterurl: u.posterurl ?? null,
         userid: "c88f3f25-7bb1-482c-8ed9-7cfb8ddd0d9c",
       };
+      
       const { data, error } = await supabase
         .from("movies")
         .insert([payload])

@@ -88,7 +88,7 @@ export function AddMovieDialog({ open, onClose, onSubmit }: AddMovieDialogProps)
             <div className="grid gap-2">
               <Label htmlFor="year">Year</Label>
               <Input id="year" type="number" inputMode="numeric" min={1888} max={2999}
-                     value={releaseyear} onChange={(e) => setYear(e.target.value)} placeholder="1972" />
+                value={releaseyear} onChange={(e) => setYear(e.target.value)} placeholder="1972" />
             </div>
 
             <div className="grid gap-2">

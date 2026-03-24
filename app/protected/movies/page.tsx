@@ -12,7 +12,7 @@ export default async function MoviesPage() {
         {/* Full-width on all breakpoints */}
         <section className="col-span-12">
           <Suspense fallback={<p>Loading…</p>}>
-            <MovieLibraryClient />
+              <MovieLibraryClient />
           </Suspense>
         </section>
       </div>

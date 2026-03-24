@@ -33,6 +33,7 @@ export function MovieTable({ movies, onViewMovie }: MovieTableProps) {
             pending
           </Badge>
         );
+        
       case "failed":
         return (
           <Badge variant="destructive" className="bg-red-100 text-red-800">
