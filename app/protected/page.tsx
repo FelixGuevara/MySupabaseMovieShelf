@@ -28,7 +28,7 @@ export default function Home() {
             */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <ActionCard href="/protected/movies" label="My Movie Library" icon={<Film className="h-5 w-5" />} />
-              <ActionCard href="/stats" label="My Movie Shelfs" icon={<BarChart3 className="h-5 w-5" />} />
+              <ActionCard href="/protected/movieShelf" label="My Movie Shelf" icon={<BarChart3 className="h-5 w-5" />} />
               <ActionCard href="/protected/about" label="About Us" icon={<BookOpenText className="h-5 w-5" />} />
               <ActionCard href="/protected/userManager" label="User Manager" icon={<UserRound className="h-5 w-5" />} />
             </div>

@@ -27,7 +27,7 @@ export default function ProtectedLayout({
 
               <nav className="flex gap-8 text-lg font-bold">
                 <a href="/protected/movies" className="hover:underline">My Movie Library</a>
-                <a href="/" className="hover:underline">My Movie Shelfs</a>
+                <a href="/protected/movieShelf" className="hover:underline">My Movie Shelf</a>
                 <a href="/protected/about" className="hover:underline">About Us</a>
                 <a href="/protected/userManager" className="hover:underline">User Manager</a>
               </nav>

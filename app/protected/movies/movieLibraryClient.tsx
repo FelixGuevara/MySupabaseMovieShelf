@@ -111,7 +111,7 @@ export default function MovieLibraryPage() {
           <div className="mb-6">
             <h2 className="text-lg text-gray-900 mb-2">My Movie Collection</h2>
             <p className="text-gray-600">
-              Search and filter your movie library ({filteredMovies.length} movies)
+              Search and filter our movie library ({filteredMovies.length} movies)
             </p>
           </div>
 
