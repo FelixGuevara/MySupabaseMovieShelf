@@ -32,6 +32,8 @@ type MovieContextShape = {
   addMovie: (u: NewMovie) => Promise<Movie | null>;
   editMovie: (id: number, patch: Partial<Omit<Movie, "id">>) => Promise<Movie | null>;
   deleteMovie: (id: number) => Promise<boolean>;
+  addToShelf: (movieId: number) => Promise<boolean>;
+  getShelfMovieIds:() => Promise<number[]>;
   getById: (id: number) => Movie | undefined;
 };
 
@@ -236,6 +238,45 @@ export function MovieProvider({ children, initialMovies, realtime = true }: Prov
     [movies]
   );
 
+const addToShelf = useCallback(async (movieId: number) => {
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("movieshelf")
+    .insert({
+      userid: user.id,
+      movieid: movieId,
+    });
+
+  if (error) {
+    if (error.code === "23505") {
+      setError("Movie already in shelf");
+    }
+      console.error("addToShelf error:", error);
+      setError(error.message);
+      return false;
+  }
+  return true;
+}, []);
+
+const getShelfMovieIds = async (): Promise<number[]> => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("movieshelf")
+    .select("movieid")
+    .eq("userid", user.id);
+
+  if (error) throw error;
+
+  return data.map((row) => row.movieid);
+};
+
   const value: MovieContextShape = {
     movies,
     filteredMovies,
@@ -253,6 +294,8 @@ export function MovieProvider({ children, initialMovies, realtime = true }: Prov
     addMovie,
     editMovie,
     deleteMovie,
+    addToShelf,
+    getShelfMovieIds,
     getById,
   };
 

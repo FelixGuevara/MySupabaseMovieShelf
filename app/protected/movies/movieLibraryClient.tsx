@@ -1,7 +1,7 @@
 // movieLibraryClient.tsx
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,12 +33,29 @@ export default function MovieLibraryPage() {
     editMovie,
     getById,
     deleteMovie,
+    addToShelf,
+    getShelfMovieIds,
   } = useMovies();
 
+  const [addedToShelfIds, setAddedToShelfIds] = useState<Set<number>>(new Set());
   const [typeFilter, setTypeFilter] = useState("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const handleAddNewMovie = () => setIsAddModalOpen(true);
   const handleCloseModal = () => setIsAddModalOpen(false);
+
+  useEffect(() => {
+  const loadShelfIds = async () => {
+    try {
+      const movieIds = await getShelfMovieIds();
+
+      setAddedToShelfIds(new Set(movieIds));
+    } catch (err) {
+      console.error("Failed to load shelf movie IDs:", err);
+    }
+  };
+
+  loadShelfIds();
+}, [getShelfMovieIds]);
 
   const handleCreateMovie = async (payload: {
     title: string;
@@ -85,6 +102,25 @@ export default function MovieLibraryPage() {
     router.push(href);
     setTimeout(() => console.log("Now at:", window.location.pathname), 50);
   };
+
+  const handleAddToShelf = async (movie: Movie) => {
+    const t = toast.loading("Adding to shelf...");
+
+    try {
+      await addToShelf(movie.id);
+      
+      setAddedToShelfIds(prev => {
+        const next = new Set(prev);
+        next.add(movie.id);
+        return next;
+      });
+
+      toast.success(`${movie.title} has been added to your movie shelf successfully.`);
+    } 
+    catch (err: any) {
+      toast.error(err.message ?? "Failed to add movie to shelf", { id: t });
+    }
+};
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -165,13 +201,15 @@ export default function MovieLibraryPage() {
             <MovieTable
               movies={filteredMovies}
               onViewMovie={handleViewMovie}
+              onAddToShelf={handleAddToShelf}
+              addedToShelfIds={addedToShelfIds}
             />
           </div>
         </div>
       </div>
 
 
-                {/* The Add Movie Dialog */}
+      {/* The Add Movie Dialog */}
       <AddMovieDialog
         open={isAddModalOpen}
         onClose={handleCloseModal}
