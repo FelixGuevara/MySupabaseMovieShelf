@@ -14,7 +14,7 @@ const MovieCard = () => {
       {/* Info */}
       <div className="p-3 space-y-1">
         <h3 className="text-sm font-semibold truncate">
-          Inception (2010)
+          Pulp Fiction (1995)
         </h3>
 
         <div className="flex items-center justify-between text-xs text-zinc-400">
