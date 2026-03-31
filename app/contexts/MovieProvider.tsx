@@ -56,7 +56,7 @@ type ProviderProps = {
   /** Optional server-hydrated data */
   initialMovies?: Movie[];
 
-  initialMovieShelf: Movie[];
+  initialMovieShelf?: Movie[];
   /** Enable realtime sync (on by default) */
   realtime?: boolean;
 };
