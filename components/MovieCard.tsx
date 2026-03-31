@@ -1,12 +1,29 @@
-const MovieCard = () => {
+interface Movie {
+  id: number;
+  title: string;
+  releaseyear: string;
+  userid: string;
+  runtime: string;
+  genre: string;
+  director: string;
+  posterurl?: string;
+  date: string;
+  status: "completed" | "pending" | "failed";
+}
+
+interface MovieCardProps {
+  movie: Movie;
+}
+
+const MovieCard = ({ movie }: MovieCardProps) => {
   return (
     <div className="group relative rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-indigo-500 transition">
 
       {/* Poster */}
       <div className="aspect-[2/3] bg-zinc-800 overflow-hidden">
         <img
-          src="/posters/pulpfiction.jpg"
-          alt="Movie Poster"
+          src={movie.posterurl || "/posters/placeholder.jpg"}
+          alt={movie.title}
           className="object-cover w-full h-full group-hover:scale-105 transition-transform"
         />
       </div>
@@ -14,7 +31,7 @@ const MovieCard = () => {
       {/* Info */}
       <div className="p-3 space-y-1">
         <h3 className="text-sm font-semibold truncate">
-          Pulp Fiction (1995)
+          {movie.title} ({movie.releaseyear})
         </h3>
 
         <div className="flex items-center justify-between text-xs text-zinc-400">

@@ -27,7 +27,19 @@ type MovieContextShape = {
   statusFilter: StatusFilter;
   setStatusFilter: (v: StatusFilter) => void;
 
+  movieShelf: Movie[];
+  filteredMovieShelf: Movie[];
+  loadingShelf: boolean;
+  errorShelf: string | null;
+
+  searchQueryShelf: string;
+  setSearchQueryShelf: (v: string) => void;
+
+  statusFilterShelf: StatusFilter;
+  setStatusFilterShelf: (v: StatusFilter) => void;
+
   refresh: () => Promise<void>;
+  refreshShelf: () => Promise<void>;
 
   addMovie: (u: NewMovie) => Promise<Movie | null>;
   editMovie: (id: number, patch: Partial<Omit<Movie, "id">>) => Promise<Movie | null>;
@@ -43,17 +55,26 @@ type ProviderProps = {
   children: ReactNode;
   /** Optional server-hydrated data */
   initialMovies?: Movie[];
+
+  initialMovieShelf: Movie[];
   /** Enable realtime sync (on by default) */
   realtime?: boolean;
 };
 
-export function MovieProvider({ children, initialMovies, realtime = true }: ProviderProps) {
+export function MovieProvider({ children, initialMovies, initialMovieShelf, realtime = true }: ProviderProps) {
   const [movies, setMovies] = useState<Movie[]>(initialMovies ?? []);
   const [loading, setLoading] = useState<boolean>(!initialMovies);
   const [error, setError] = useState<string | null>(null);
 
+  const [movieShelf, setMovieShelf] = useState<Movie[]>(initialMovieShelf ?? []);
+  const [loadingShelf, setLoadingShelf] = useState<boolean>(!initialMovieShelf);
+  const [errorShelf, setErrorShelf] = useState<string | null>(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  const [searchQueryShelf, setSearchQueryShelf] = useState("");
+  const [statusFilterShelf, setStatusFilterShelf] = useState<StatusFilter>("all");
 
   const supabase = createClient();
 
@@ -71,6 +92,7 @@ export function MovieProvider({ children, initialMovies, realtime = true }: Prov
       setError(error.message);
       setMovies([]);
     } else {
+
       setMovies((data ?? []) as Movie[]);
     }
     setLoading(false);
@@ -80,6 +102,55 @@ export function MovieProvider({ children, initialMovies, realtime = true }: Prov
   useEffect(() => {
     if (!initialMovies) fetchMovies();
   }, [initialMovies, fetchMovies]);
+
+  const fetchMovieShelf = useCallback(async () => {
+  setLoadingShelf(true);
+  setErrorShelf(null);
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    setErrorShelf("Not authenticated");
+    setMovieShelf([]);
+    setLoadingShelf(false);
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("movieshelf")
+    .select(`
+      movie:movies (
+        id,
+        title,
+        releaseyear,
+        runtime,
+        genre,
+        director,
+        posterurl,
+        status,
+        date
+      )
+    `)
+    .eq("userid", user.id)
+    .order("added_at", { ascending: false });
+
+  if (error) {
+    console.log(error.message);
+    setErrorShelf(error.message);
+    setMovieShelf([]);
+  } else {
+    setMovieShelf((data ?? []).map((row: any) => row.movie));
+  }
+
+  setLoadingShelf(false);
+}, [supabase]);
+
+ useEffect(() => {
+    if (!initialMovieShelf) fetchMovieShelf();
+  }, [initialMovieShelf, fetchMovieShelf]);
 
     // Optional: realtime sync for inserts/updates/deletes
     useEffect(() => {
@@ -122,6 +193,17 @@ export function MovieProvider({ children, initialMovies, realtime = true }: Prov
       return statusOk && textOk;
     });
   }, [movies, searchQuery, statusFilter]);
+
+  const filteredMovieShelf = useMemo(() => {
+    const q = searchQueryShelf.trim().toLowerCase();
+    return movieShelf.filter((u) => {
+      const statusOk = statusFilterShelf === "all" || (u.status ?? "").toLowerCase() === statusFilterShelf;
+      const textOk =
+        !q ||
+        (u.title ?? "").toLowerCase().includes(q) 
+      return statusOk && textOk;
+    });
+  }, [movieShelf, searchQueryShelf, statusFilterShelf]);
 
   const addMovie = useCallback(
     async (u: NewMovie) => {
@@ -289,7 +371,19 @@ const getShelfMovieIds = async (): Promise<number[]> => {
     statusFilter,
     setStatusFilter,
 
+    movieShelf,
+    filteredMovieShelf,
+    loadingShelf,
+    errorShelf,
+
+    searchQueryShelf,
+    setSearchQueryShelf,
+
+    statusFilterShelf,
+    setStatusFilterShelf,
+
     refresh: fetchMovies,
+    refreshShelf: fetchMovieShelf,
 
     addMovie,
     editMovie,

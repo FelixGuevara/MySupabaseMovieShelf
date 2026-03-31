@@ -16,14 +16,15 @@ import MovieGrid from "@/components/MovieGrid";
 
 export default function MovieShelfPage() {
  const {
-    searchQuery,
-    statusFilter,
-    setSearchQuery,
-    setStatusFilter,
-  }= useMovies();
+    filteredMovieShelf,
+    searchQueryShelf,
+    statusFilterShelf,
+    setSearchQueryShelf,
+    setStatusFilterShelf,
+  } = useMovies();
     
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(e.target.value);
+      setSearchQueryShelf(e.target.value);
     };
 
   return (
@@ -44,9 +45,9 @@ export default function MovieShelfPage() {
             <div className="mb-6">
                 <h2 className="text-lg text-gray-900 mb-2">My Own Movie Shelf</h2>
                 <div className="text-sm text-zinc-400 flex gap-4">
-                    <span>10 Movies</span>
-                    <span>10 Watched</span>
-                    <span>6 Favorites</span>
+                    <span>{filteredMovieShelf.length} Movies</span>
+                    <span>{filteredMovieShelf.length} Watched</span>
+                    <span>{filteredMovieShelf.length} Favorites</span>
                 </div>
             </div>
 
@@ -58,14 +59,14 @@ export default function MovieShelfPage() {
                     <Input
                     type="text"
                     placeholder="Search movies..."
-                    value={searchQuery}
+                    value={searchQueryShelf}
                     onChange={handleSearch}
                     className="pl-10 bg-gray-50 border-gray-200"
                     />
                 </div>
                 </div>
 
-                <Select value={statusFilter} onValueChange={setStatusFilter as any}>
+                <Select value={statusFilterShelf} onValueChange={setStatusFilterShelf as any}>
                 <SelectTrigger className="w-40 bg-gray-50 border-gray-200">
                     <SelectValue placeholder="All Movies" />
                 </SelectTrigger>
@@ -78,7 +79,7 @@ export default function MovieShelfPage() {
             </div>
 
             <div className="text-sm text-zinc-200 py-6">
-                <MovieGrid />
+                <MovieGrid movies={filteredMovieShelf}/>
             </div>
 
         </div>
