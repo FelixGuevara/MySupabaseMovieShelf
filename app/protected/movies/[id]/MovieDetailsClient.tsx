@@ -62,6 +62,7 @@ export default function MovieDetailsClient({ id }: { id: number }) {
     runtime: movie?.runtime ?? "",
     genre: movie?.genre ?? "",
     director: movie?.director ?? "",
+    posterurl: movie?.posterurl ?? "",
     status: (movie?.status ?? "pending") as Status,
   }));
 
@@ -73,6 +74,7 @@ export default function MovieDetailsClient({ id }: { id: number }) {
         runtime: movie.runtime ?? "",
         genre: movie.genre ?? "",
         director: movie.director ?? "",
+        posterurl: movie?.posterurl ?? "",
         status: (movie.status ?? "pending") as Status,
       });
     }
@@ -149,7 +151,7 @@ export default function MovieDetailsClient({ id }: { id: number }) {
           <div className="min-w-0">
             <h1 className="truncate text-2xl font-semibold text-gray-900">{movie.title}</h1>
             <p className="text-gray-600">
-              Added by {movie.userid} on {formatDate(movie.date)}
+              Added on {formatDate(movie.date)}
             </p>
           </div>
 
@@ -221,6 +223,16 @@ export default function MovieDetailsClient({ id }: { id: number }) {
                         placeholder="Frank Darabont"
                       />
                     </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="posterUrl">Poster URL</Label>
+                    <Input
+                      id="posterurl"
+                      placeholder="https://image.tmdb.org/t/p/w500/xxxx.jpg"
+                      value={form.posterurl}
+                      onChange={onChange("posterurl")}
+                    />
                   </div>
 
                   <div className="grid gap-2">
@@ -320,7 +332,7 @@ export default function MovieDetailsClient({ id }: { id: number }) {
               <DetailItem label="Run Time" value={movie.runtime} />
               <DetailItem label="Genre" value={movie.genre} />
               <DetailItem label="Director" value={movie.director} />
-              <DetailItem label="Added By (ID)" value={`${movie.userid} (${movie.userid})`} />
+              <DetailItem label="Created By" value={movie.director} />
               <DetailItem label="Date Added" value={formatDate(movie.date)} />
               <DetailItem label="Status" value={<MovieStatusBadge status={movie.status} />} />
             </div>

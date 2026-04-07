@@ -1,4 +1,5 @@
 import MovieCard from "./MovieCard";
+import { useRouter } from "next/navigation";
 
 interface Movie {
   id: number;
@@ -17,8 +18,19 @@ interface MovieGridProps {
 }
 
 const MovieGrid = ({ movies }: MovieGridProps) => {
-  // Replace with your actual movie data
-  //const movies = Array.from({ length: 10 });
+
+  const router = useRouter();
+
+  const handleViewMovie = (movie: Movie) => {
+      console.log("Navigating to id:", movie.id);
+      
+
+      const id = movie.id;
+      const href = `/protected/movies/${encodeURIComponent(id)}`;
+      console.log("Pushing to:", href);
+      router.push(href);
+      setTimeout(() => console.log("Now at:", window.location.pathname), 50);
+  };
 
   if (movies.length === 0) {
     return (
@@ -32,7 +44,7 @@ const MovieGrid = ({ movies }: MovieGridProps) => {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
       {movies.map((_, index) => (
-        <MovieCard key={index} movie={movies[index]} />
+        <MovieCard key={index} movie={movies[index]} onViewMovie={handleViewMovie}/>
       ))}
     </div>
   );
