@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 
 type Status = "Active" | "Inactive";
+type Role = "Admin" | "Enthusiast";
 
 export interface EditableUser {
   id: string;
@@ -57,6 +58,11 @@ export function UserEditDialog({ open, onOpenChange, user, onSave }: UserEditDia
   const onStatusChange = (value: string) => {
     if (!form) return;
     setForm({ ...form, status: value as Status });
+  };
+
+   const onRoleChange = (value: string) => {
+    if (!form) return;
+    setForm({ ...form, role: value as Role });
   };
 
   const submit = async () => {
@@ -117,17 +123,19 @@ export function UserEditDialog({ open, onOpenChange, user, onSave }: UserEditDia
               placeholder="name@company.com"
             />
           </div>
-
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="role">Role</Label>
-              <Input
-                id="role"
-                value={form?.role ?? ""}
-                onChange={onChange("role")}
-                placeholder="e.g., Admin, Editor, Viewer"
-              />
-            </div>
+              <Select value={form?.role ?? "Admin"} onValueChange={onRoleChange}>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin">Admin</SelectItem>
+                  <SelectItem value="Enthusiast">Enthusiast</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>      
             <div className="grid gap-2">
               <Label htmlFor="status">Status</Label>
               <Select value={form?.status ?? "Active"} onValueChange={onStatusChange}>
