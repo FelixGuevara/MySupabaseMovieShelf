@@ -214,7 +214,7 @@ export function MovieProvider({ children, initialMovies, initialMovieShelf, real
         genre: u.genre,
         director: u.director,
         posterurl: u.posterurl ?? null,
-        userid: "c88f3f25-7bb1-482c-8ed9-7cfb8ddd0d9c",
+        userid: "8b2343a0-c9c5-4e36-ad74-7daf2bcc038e",
       };
       
       const { data, error } = await supabase

@@ -20,6 +20,7 @@ type AddMovieDialogProps = {
     title: string;
     director: string;
     releaseyear: string;
+    runtime: string;
     genre: string;
     status: "completed" | "pending" | "failed";
     posterurl?: string;
@@ -30,6 +31,7 @@ export function AddMovieDialog({ open, onClose, onSubmit }: AddMovieDialogProps)
   const [title, setTitle] = useState("");
   const [director, setDirector] = useState("");
   const [releaseyear, setYear] = useState<string>("");
+  const [runtime, setRunTime] = useState("");
   const [genre, setGenre] = useState("drama");
   const [status, setStatus] = useState<"completed" | "pending" | "failed">("pending");
   const [posterurl, setPosterUrl] = React.useState("");
@@ -47,6 +49,7 @@ export function AddMovieDialog({ open, onClose, onSubmit }: AddMovieDialogProps)
         title: title.trim(),
         director: director.trim(),
         releaseyear: releaseyear,
+        runtime: runtime,
         genre,
         status,
         posterurl: posterurl.trim() || undefined,
@@ -56,6 +59,7 @@ export function AddMovieDialog({ open, onClose, onSubmit }: AddMovieDialogProps)
       setTitle("");
       setDirector("");
       setYear("");
+      setRunTime("");
       setGenre("drama");
       setStatus("pending");
       setPosterUrl("");
@@ -79,16 +83,22 @@ export function AddMovieDialog({ open, onClose, onSubmit }: AddMovieDialogProps)
             <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: The Godfather" />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="director">Director</Label>
-            <Input id="director" value={director} onChange={(e) => setDirector(e.target.value)} placeholder="Ex: Francis Ford Coppola" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="year">Year</Label>
               <Input id="year" type="number" inputMode="numeric" min={1888} max={2999}
                 value={releaseyear} onChange={(e) => setYear(e.target.value)} placeholder="1972" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="runtime">Run Time</Label>
+              <Input id="runtime" value={runtime} onChange={(e) => setRunTime(e.target.value)} placeholder="2h 22m" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="director">Director</Label>
+              <Input id="director" value={director} onChange={(e) => setDirector(e.target.value)} placeholder="Ex: Francis Ford Coppola" />
             </div>
 
             <div className="grid gap-2">

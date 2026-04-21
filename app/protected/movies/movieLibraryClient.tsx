@@ -61,6 +61,7 @@ export default function MovieLibraryPage() {
     title: string;
     director: string;
     releaseyear: string;
+    runtime: string;
     genre: string;
     status: "completed" | "pending" | "failed";
     posterurl?: string;
@@ -72,7 +73,7 @@ export default function MovieLibraryPage() {
       genre: payload.genre,
       status: payload.status,
       posterurl: payload.posterurl,
-      runtime: "",
+      runtime: payload.runtime,
       userid: "",
       // add/align any other required fields your Movie type expects
     };
