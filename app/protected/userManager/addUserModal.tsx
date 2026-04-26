@@ -74,7 +74,7 @@ export function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModalProps) 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Felix</DialogTitle>
+          <DialogTitle>Add New User2</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
