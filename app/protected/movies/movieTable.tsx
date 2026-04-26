@@ -13,6 +13,7 @@ interface Movie {
   runtime: string;
   genre: string;
   director: string;
+  userrating: number;
   date: string;
   status: "completed" | "pending" | "failed";
 }
@@ -89,6 +90,9 @@ export function MovieTable({ movies, onViewMovie, onAddToShelf, addedToShelfIds 
               <th className="text-left py-3 px-2 text-xs uppercase text-gray-500 tracking-wider">
                 Director
               </th>
+              <th className="text-left py-3 px-2 text-xs uppercase text-gray-500 tracking-wider">
+                User Rating
+              </th>
               <th className="text-left py-3 px-1 text-xs uppercase text-gray-500 tracking-wider">
                 Date Added
               </th>
@@ -117,6 +121,9 @@ export function MovieTable({ movies, onViewMovie, onAddToShelf, addedToShelfIds 
                 </td>
                 <td className="py-4 px-2">
                   <div className="text-gray-900">{movie.director}</div>
+                </td>
+                <td className="py-4 px-2">
+                  <div className="text-gray-900">{movie.userrating}</div>
                 </td>
                 <td className="py-4 px-1">
                   <div className="text-gray-600">{movie.date ? new Date(movie.date).toLocaleDateString("en-US") : "—"}</div>

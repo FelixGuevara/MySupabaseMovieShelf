@@ -64,6 +64,7 @@ export default function MovieDetailsClient({ id }: { id: number }) {
     director: movie?.director ?? "",
     posterurl: movie?.posterurl ?? "",
     status: (movie?.status ?? "pending") as Status,
+    userrating: movie?.userrating ?? 0,
   }));
 
   React.useEffect(() => {
@@ -76,6 +77,7 @@ export default function MovieDetailsClient({ id }: { id: number }) {
         director: movie.director ?? "",
         posterurl: movie?.posterurl ?? "",
         status: (movie.status ?? "pending") as Status,
+        userrating: movie.userrating ?? 0,
       });
     }
   }, [movie]);
@@ -107,6 +109,23 @@ export default function MovieDetailsClient({ id }: { id: number }) {
   };
 
   const submitEdit = async () => {
+
+    if (!form.userrating) {
+      toast.error("User Rating is required.");
+      return;
+    }
+    var rating = Number(form.userrating);
+
+    if(!Number.isInteger(rating)){
+      toast.error("User Rating must be an Integer.");
+      return;
+    }
+
+    if(rating < 1 || rating > 5){
+      toast.error("User Rating must between 1 and 5.");
+      return;
+    }
+
     if (!form.title.trim()) {
       toast.error("Title is required.");
       return;
@@ -235,18 +254,29 @@ export default function MovieDetailsClient({ id }: { id: number }) {
                     />
                   </div>
 
-                  <div className="grid gap-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select value={form.status} onValueChange={onStatusChange}>
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="failed">Failed</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="status">Status</Label>
+                      <Select value={form.status} onValueChange={onStatusChange}>
+                        <SelectTrigger id="status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="failed">Failed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="userrating">User Rating</Label>
+                      <Input
+                        id="userrating"
+                        value={form.userrating}
+                        onChange={onChange("userrating")}
+                        placeholder="1 - 5"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -321,6 +351,7 @@ export default function MovieDetailsClient({ id }: { id: number }) {
               <div><span className="font-semibold text-gray-900">Year:</span> {movie.releaseyear}</div>
               <div><span className="font-semibold text-gray-900">Runtime:</span> {movie.runtime}</div>
               <div><span className="font-semibold text-gray-900">Genre:</span> {movie.genre}</div>
+              <div><span className="font-semibold text-gray-900">Rating:</span> {movie.userrating}</div>
             </div>
           </div>
 
@@ -332,7 +363,7 @@ export default function MovieDetailsClient({ id }: { id: number }) {
               <DetailItem label="Run Time" value={movie.runtime} />
               <DetailItem label="Genre" value={movie.genre} />
               <DetailItem label="Director" value={movie.director} />
-              <DetailItem label="Created By" value={movie.director} />
+              <DetailItem label="User Rating" value={movie.userrating} />
               <DetailItem label="Date Added" value={formatDate(movie.date)} />
               <DetailItem label="Status" value={<MovieStatusBadge status={movie.status} />} />
             </div>

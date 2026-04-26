@@ -10,6 +10,7 @@ export interface Movie {
   date: string; // ISO or display string
   status: "completed" | "pending" | "failed";
   posterurl?: string; 
+  userrating: number;
 }
 
 export type NewMovie = {

@@ -85,7 +85,7 @@ export function MovieProvider({ children, initialMovies, initialMovieShelf, real
     // Read from the *view* that exposes camelCase + userName
     const { data, error } = await supabase
       .from("movies")
-      .select("id, title, releaseyear, runtime, genre, director, date, status, posterurl, userid")
+      .select("id, title, releaseyear, runtime, genre, director, date, status, posterurl, userrating, userid")
       .order("date", { ascending: false });
 
     if (error) {
@@ -249,6 +249,7 @@ export function MovieProvider({ children, initialMovies, initialMovieShelf, real
     if (patch.posterurl !== undefined) dbPatch.posterurl = patch.posterurl ?? null;
     if (patch.status !== undefined) dbPatch.status = patch.status;
     if (patch.date !== undefined) dbPatch.date = patch.date;
+    if (patch.userrating !== undefined) dbPatch.userrating = patch.userrating;
 
     // Guard: nothing to update
     if (Object.keys(dbPatch).length === 0) {
@@ -295,6 +296,7 @@ export function MovieProvider({ children, initialMovies, initialMovieShelf, real
       date: fullRow.date,
       status: fullRow.status,
       posterurl: fullRow.posterurl ?? undefined,
+      userrating:  fullRow.userrating ?? undefined,
     };
 
     setMovies((prev) => prev.map((u) => (u.id === id ? updated : u)));
