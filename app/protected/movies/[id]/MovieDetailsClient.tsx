@@ -9,6 +9,9 @@ import { MovieStatusBadge } from "@/components/MovieStatusBadge";
 import { useMovies } from "@/app/contexts/MovieProvider";
 import { toast } from "sonner";
 import Image from "next/image";
+import { Suspense } from "react";
+import { MovieCommentProvider } from "@/app/contexts/MovieCommentProvider";
+import { MovieComments } from "@/components/MovieComments";
 
 import {
   Dialog,
@@ -369,6 +372,12 @@ export default function MovieDetailsClient({ id }: { id: number }) {
             </div>
           </div>
         </div>
+
+        <Suspense fallback={<div className="p-4">Loading movieComments…</div>}>
+          <MovieCommentProvider movieid={movie.id}>
+            <MovieComments></MovieComments>
+          </MovieCommentProvider>
+        </Suspense>
 
       </div>
     </div>
