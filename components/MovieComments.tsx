@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { useMovieComment } from "@/app/contexts/MovieCommentProvider";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,7 @@ const { moviecomments, loading, addComment, error } = useMovieComment();
 const [value, setValue] = useState("");
 
     if (loading) return <p>Loading Comments...</p>;
+    console.log(moviecomments);
 
     return (
         <section>

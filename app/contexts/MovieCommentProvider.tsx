@@ -38,42 +38,42 @@ export function MovieCommentProvider({ children, movieid, realtime = true }: Pro
 
   const supabase = createClient();
 
-  const fetchMovieComment = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+const fetchMovieComment = useCallback(async () => {
+  setLoading(true);
+  setError(null);
 
-    const {
-        data: { user },
-        error: authError,
-    } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-        setError("Not authenticated");
-        setMovieComments([]);
-        setLoading(false);
-        return;
-    }
-
-    const { data, error } = await supabase
-        .from("moviecomment")
-        .select(`*`)
-        .eq("movieid", movieid)
-        .order("added_at", { ascending: false });
-
-    if (error) {
-        console.log(error.message);
-        setError(error.message);
-        setMovieComments([]);
-    } else {
-        setMovieComments((data ?? []).map((row: any) => row.movie));
-    }
-
+  if (authError || !user) {
+    setError("Not authenticated");
+    setMovieComments([]);
     setLoading(false);
-    }, [supabase]);
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("moviecomment")
+    .select(`*`)
+    .eq("userid", user.id)
+    .order("added_at", { ascending: false });
+
+  if (error) {
+    console.log(error.message);
+    setError(error.message);
+    setMovieComments([]);
+  } else {
+    setMovieComments((data ?? []) as MovieComment[]);
+  }
+
+  setLoading(false);
+}, [supabase]);
 
   // Initial load if no server data provided
   useEffect(() => {
-    if (!moviecomments) fetchMovieComment();
+    if (moviecomments.length === 0 ) fetchMovieComment();
   }, [moviecomments, fetchMovieComment]);
 
 
