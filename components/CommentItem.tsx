@@ -6,17 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import type { MovieComment } from "@/app/types/movieComment";
-import { useMovieComment } from "@/app/contexts/MovieCommentProvider";
+import { useMovieComments } from "@/app/contexts/MovieCommentProvider";
 import { createClient } from "@/lib/supabase/client";
 
 export function CommentItem({ comment }: { comment: MovieComment }) {
   const supabase = createClient();
-  const { editComment } = useMovieComment();
+  const { editComment } = useMovieComments();
+
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(comment.content);
   const [saving, setSaving] = useState(false);
 
-  const { data: { user }, } = useState(() => ({ data: { user: null as any } }))[0];
+  const {
+    data: { user },
+  } = useState(() => ({ data: { user: null as any } }))[0];
+
   const isOwner = comment.userid === user?.id;
 
   const onSave = async () => {
@@ -41,13 +45,25 @@ export function CommentItem({ comment }: { comment: MovieComment }) {
   if (isEditing) {
     return (
       <div className="rounded-md border p-3 space-y-2">
-        <Textarea value={value} onChange={(e) => setValue(e.target.value)} rows={3}/>
+        <Textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          rows={3}
+        />
         <div className="flex gap-2">
           <Button size="sm" onClick={onSave} disabled={saving}>
             <Check className="mr-1 h-4 w-4" />
             Save
           </Button>
-          <Button size="sm" variant="outline"onClick={() => { setValue(comment.content); setIsEditing(false);}} disabled={saving}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setValue(comment.content);
+              setIsEditing(false);
+            }}
+            disabled={saving}
+          >
             <X className="mr-1 h-4 w-4" />
             Cancel
           </Button>
@@ -64,7 +80,11 @@ export function CommentItem({ comment }: { comment: MovieComment }) {
         {comment.added_at && <span>(edited)</span>}
 
         {isOwner && (
-          <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsEditing(true)}
+          >
             <Pencil className="h-4 w-4" />
           </Button>
         )}

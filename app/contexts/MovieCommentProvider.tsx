@@ -1,4 +1,4 @@
-// contexts/MovieCommentProvider.tsx
+// contexts/MovieCommentsProvider.tsx
 "use client";
 
 import {
@@ -13,141 +13,150 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import type { MovieComment } from "../types/movieComment";
 
-type MovieCommentContextShape = {
-    moviecomments: MovieComment[];
-    loading: boolean;
-    error: string | null;
+type MovieCommentsContextShape = {
+  comments: MovieComment[];
+  loading: boolean;
+  error: string | null;
 
-    refresh: () => Promise<void>;
-    addComment: (content: string) => Promise<boolean>;
-    editComment: (id: number, content: string) => Promise<boolean | null>;
+  addComment: (content: string) => Promise<boolean>;
+  editComment: (id: number, content: string) => Promise<boolean>;
+  refresh: () => Promise<void>;
 }
 
-const MovieCommentContext = createContext<MovieCommentContextShape | undefined>(undefined);
+const MovieCommentContext = createContext<MovieCommentsContextShape | undefined>(undefined);
 
 type ProviderProps = {
   children: ReactNode;
-  movieid?: number;
+  movieId: number;
+/** Enable realtime sync (on by default) */
   realtime?: boolean;
 };
 
-export function MovieCommentProvider({ children, movieid, realtime = true }: ProviderProps) {
-  const [moviecomments, setMovieComments] = useState<MovieComment[]>([]);
-  const [loading, setLoading] = useState<boolean>(!movieid);
+export function MovieCommentsProvider({ children, movieId, realtime = true }: ProviderProps) {
+const supabase = createClient();
+  const [comments, setComments] = useState<MovieComment[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createClient();
+    const fetchComments = useCallback(async () => {
+      setLoading(true);
+      setError(null);
+  
+      // Read from the *view* that exposes camelCase + userName
+      const { data, error } = await supabase
+        .from("moviecomment")
+        .select("*")
+        .eq("movieid", movieId)
+        .order("added_at", { ascending: false });
 
-const fetchMovieComment = useCallback(async () => {
-  setLoading(true);
-  setError(null);
+      if (error) {
+        setError(error.message);
+        setComments([]);
+      } else {
+  
+        setComments((data ?? []) as MovieComment[]);
+      }
+      setLoading(false);
+    }, [supabase]);
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+     useEffect(() => {
+        fetchComments();
+      }, [fetchComments]);
+    
+        // Optional: realtime sync for inserts/updates/deletes
+        useEffect(() => {
+          if (!realtime) return;
+      
+          const channel = supabase
+            .channel("movies-changes")
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "moviecomment" },
+              (payload) => {
+                if (payload.eventType === "INSERT") {
+                  const newRow = payload.new as MovieComment;
+                  setComments((prev) => (prev.some((u) => u.id === newRow.id) ? prev : [newRow, ...prev]));
+                } else if (payload.eventType === "UPDATE") {
+                  const updated = payload.new as MovieComment;
+                  setComments((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+                } else if (payload.eventType === "DELETE") {
+                  const removed = payload.old as MovieComment;
+                  setComments((prev) => prev.filter((u) => u.id !== removed.id));
+                }
+              }
+            )
+            .subscribe();
+      
+          return () => {
+            supabase.removeChannel(channel);
+          };
+        }, [realtime]);
 
-  if (authError || !user) {
-    setError("Not authenticated");
-    setMovieComments([]);
-    setLoading(false);
-    return;
-  }
 
-  const { data, error } = await supabase
-    .from("moviecomment")
-    .select(`*`)
-    .eq("userid", user.id)
-    .order("added_at", { ascending: false });
+    const addComment = useCallback(async (content: string) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error("Not authenticated");
 
-  if (error) {
-    console.log(error.message);
-    setError(error.message);
-    setMovieComments([]);
-  } else {
-    setMovieComments((data ?? []) as MovieComment[]);
-  }
-
-  setLoading(false);
-}, [supabase]);
-
-  // Initial load if no server data provided
-  useEffect(() => {
-    if (moviecomments.length === 0 ) fetchMovieComment();
-  }, [moviecomments, fetchMovieComment]);
-
-
-  const addComment = useCallback(async (content: string) => {
-  const user = (await supabase.auth.getUser()).data.user;
-  if (!user) throw new Error("Not authenticated");
-
-  const { error } = await supabase
-    .from("moviecomment")
-    .insert({
-      userid: user.id,
-      movieid: movieid,
-      content: content,
-    });
-
-  if (error) {
-      console.error("addComment error:", error);
-      setError(error.message);
-      return false;
-  }
-  return true;
-}, []);
-
-const editComment = useCallback(async (id: number, content: string) => {
-  setError(null);
-
-  const user = (await supabase.auth.getUser()).data.user;
-  if (!user) throw new Error("Not authenticated");
-
-    const { data: fullRow, error: viewErr } = await supabase
-      .from("moviecomment")
-      .update({
+    const { error } = await supabase
+        .from("moviecomment")
+        .insert({
+        userid: user.id,
+        movieid: movieId,
         content,
-        added_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .eq("userid", user.id)
-      .select()
-      .single();
+        });
 
-    if (viewErr) {
-      setError(viewErr.message);
-      return null;
+    if (error) {
+        console.error("addComment error:", error);
+        setError(error.message);
+        return false;
     }
+    return true;
+    }, []);
 
-    const updated: MovieComment = {
-        id: fullRow.id,       
-        userid: fullRow.userid,
-        movieid: fullRow.movieid,
-        content: fullRow.content,
-        added_at: fullRow.added_at,
-        };
+    const editComment = useCallback(async (id: number, content: string) => {
+        const user = (await supabase.auth.getUser()).data.user;
+        if (!user) throw new Error("Not authenticated");
 
-    setMovieComments((prev) => prev.map((u) => (u.id === id ? updated : u)));
-    return true; 
+        const { data, error } = await supabase
+        .from("moviecomment")
+        .update({
+            content,
+            added_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .eq("userid", user.id)
+        .select()
+        .single();
 
-},[supabase]
+        if (error) {
+        setError(error.message);
+        return false;
+        }
+
+        // ✅ Optimistic UI update
+        setComments((prev) =>
+        prev.map((c) => (c.id === id ? data : c))
+        );
+
+        return true;
+    },
+    [supabase]
 );
 
-const value: MovieCommentContextShape = {
-    moviecomments,
-    loading,
-    error,
-
-    refresh: fetchMovieComment,
-    addComment,
-    editComment,
-}
+    const value: MovieCommentsContextShape = {
+        comments,
+        loading,
+        error,
+        addComment,
+        editComment,
+        refresh: fetchComments,
+  };
 
     return <MovieCommentContext.Provider value={value}>{children}</MovieCommentContext.Provider>;
 }
 
-export function useMovieComment() {
+export function useMovieComments() {
   const ctx = useContext(MovieCommentContext);
-  if (!ctx) throw new Error("useMovieComment must be used within MovieCommentProvider");
+  if (!ctx) throw new Error("useMovieComments must be used within MovieCommentsProvider");
   return ctx;
 }

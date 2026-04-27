@@ -10,7 +10,7 @@ import { useMovies } from "@/app/contexts/MovieProvider";
 import { toast } from "sonner";
 import Image from "next/image";
 import { Suspense } from "react";
-import { MovieCommentProvider } from "@/app/contexts/MovieCommentProvider";
+import { MovieCommentsProvider } from "@/app/contexts/MovieCommentProvider";
 import { MovieComments } from "@/components/MovieComments";
 
 import {
@@ -374,9 +374,9 @@ export default function MovieDetailsClient({ id }: { id: number }) {
         </div>
 
         <Suspense fallback={<div className="p-4">Loading movieComments…</div>}>
-          <MovieCommentProvider movieid={movie.id}>
+          <MovieCommentsProvider movieId={movie.id}>
             <MovieComments></MovieComments>
-          </MovieCommentProvider>
+          </MovieCommentsProvider>
         </Suspense>
 
       </div>

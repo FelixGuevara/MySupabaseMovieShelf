@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useMovieComment } from "@/app//contexts/MovieCommentProvider";
+import { useMovieComments } from "@/app/contexts/MovieCommentProvider";
 import { toast } from "sonner";
 import { CommentItem } from "./CommentItem";
 
 export function MovieComments() {
-  const { moviecomments, loading, addComment, error } = useMovieComment();
+  const { comments, loading, addComment, error } = useMovieComments();
   const [value, setValue] = useState("");
 
   if (loading) return <p>Loading comments…</p>;
@@ -17,11 +17,11 @@ export function MovieComments() {
     <section className="mt-8 space-y-4">
       <h3 className="text-lg font-semibold">Comments</h3>
 
-      {moviecomments.length === 0 && (
+      {comments.length === 0 && (
         <p className="text-sm text-gray-500">No comments yet.</p>
       )}
 
-      {moviecomments.map((c) => (
+      {comments.map((c) => (
         <CommentItem key={c.id} comment={c} />
       ))}
 
