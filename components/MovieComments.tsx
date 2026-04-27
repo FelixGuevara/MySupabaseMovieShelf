@@ -1,48 +1,56 @@
 "use client";
 
 import { useState } from "react";
-import { useMovieComment } from "@/app/contexts/MovieCommentProvider";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { useMovieComment } from "@/app//contexts/MovieCommentProvider";
 import { toast } from "sonner";
+import { CommentItem } from "./CommentItem";
 
 export function MovieComments() {
-const { moviecomments, loading, addComment, error } = useMovieComment();
-const [value, setValue] = useState("");
+  const { moviecomments, loading, addComment, error } = useMovieComment();
+  const [value, setValue] = useState("");
 
-    if (loading) return <p>Loading Comments...</p>;
-    console.log(moviecomments);
+  if (loading) return <p>Loading comments…</p>;
 
-    return (
-        <section>
-            <h3>Comments</h3>
+  return (
+    <section className="mt-8 space-y-4">
+      <h3 className="text-lg font-semibold">Comments</h3>
 
-            { moviecomments.length === 0 && (
-                <p> No Comments yet.</p> 
-            )}
+      {moviecomments.length === 0 && (
+        <p className="text-sm text-gray-500">No comments yet.</p>
+      )}
 
-            <Textarea placeholder = "Write a Comment" value = {value} 
-                onChange={(e) => setValue(e.target.value)}
-            />
+      {moviecomments.map((c) => (
+        <CommentItem key={c.id} comment={c} />
+      ))}
 
-            <Button
-                onClick={ async()=>{
-                    if(!value.trim()){
-                        toast.error("Comment cannot be empty")
-                        return;
-                    }
+      <Textarea
+        placeholder="Write a comment…"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+      />
 
-                    const ok = await addComment(value)
-                    if(ok){
-                        setValue("");
-                        toast.success("Comment added...")
-                    } else{
-                        toast.error("Fail to add comment.")
-                    }
+      <Button
+        onClick={async () => {
+          if (!value.trim()) {
+            toast.error("Comment cannot be empty");
+            return;
+          }
 
-                }}
-            >Add Comment</Button>
-        </section>
-    );
+          const ok = await addComment(value);
+          if (ok) {
+            setValue("");
+            toast.success("Comment added");
+          } else {
+            toast.error("Failed to add comment");
+          }
+        }}
+      >
+        Add Comment
+      </Button>
 
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </section>
+  );
 }
