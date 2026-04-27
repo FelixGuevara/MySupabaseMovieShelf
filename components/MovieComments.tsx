@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useMovieComment } from "@/app//contexts/MovieCommentProvider";
+import { useMovieComment } from "@/app/contexts/MovieCommentProvider";
 import { toast } from "sonner";
 import { CommentItem } from "./CommentItem";
 
