@@ -8,20 +8,29 @@ import { toast } from "sonner";
 import type { MovieComment } from "@/app/types/movieComment";
 import { useMovieComments } from "@/app/contexts/MovieCommentProvider";
 import { createClient } from "@/lib/supabase/client";
+import { useEffect } from "react";
 
 export function CommentItem({ comment }: { comment: MovieComment }) {
   const supabase = createClient();
   const { editComment } = useMovieComments();
-
+  const [userId, setUserId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(comment.content);
   const [saving, setSaving] = useState(false);
 
-  const {
-    data: { user },
-  } = useState(() => ({ data: { user: null as any } }))[0];
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+    });
+  }, [supabase]);
 
-  const isOwner = comment.userid === user?.id;
+  const isOwner = userId === comment.userid;
+
+
+  console.log(isOwner);
+  console.log("FELIX");
+  console.log(comment.userid);
+  console.log(userId);
 
   const onSave = async () => {
     if (!value.trim()) {
